@@ -1,11 +1,14 @@
 #include <iostream>
 #include <fstream>
+#include <functional>
 #include <string>
 #include <sstream>
 #include <vector>
 #include <map>
-#include <bitset>
 #include <scn/scn.h>
+#include "header/opcode.h"
+#include "header/compile.h"
+#include "header/parser.h"
 
 using   std::string, 
         std::fstream,
@@ -13,19 +16,10 @@ using   std::string,
         std::vector,
         std::map , 
         std::pair,
-        std::bitset,
+        std::function,
         std::endl,
         std::getline,
         std::cout ;
-
-enum Opcode {
-    add, nand,
-    lw, sw, beq,
-    jalr,
-    halt, noop,
-    fill, 
-    non_support_opcode
-};
 
 string IntegerToString2sComp(int Integer){  
     /* check Int input is over 16 bits */
@@ -40,19 +34,6 @@ string IntegerToString2sComp(int Integer){
 		Integer = Integer >> 1;
 	}
 	return result;
-}
-
-Opcode encodeOpcode(string s){
-    if(s == "add") return add;
-    if(s == "nand") return nand;
-    if(s == "lw") return lw;
-    if(s == "sw") return sw;
-    if(s == "beq") return beq;
-    if(s == "jalr") return jalr;
-    if(s == "halt") return halt;
-    if(s == "noop") return noop;
-    if(s == ".fill") return fill;
-    return non_support_opcode;
 }
 
 int main(int argc, char *argv[]) {
@@ -81,85 +62,6 @@ int main(int argc, char *argv[]) {
         }
         cout << label << " " << opcode << " " << arg0 << " " << arg1 << " " << arg2 << endl;
     };
-    auto isNumber = [](const string& s){
-        return s.find_first_not_of("-0123456789") == string::npos;
-    };
-    auto toInt = [](string num){
-        return stoi(num, nullptr, 2);
-    };
-    auto r_type = [](const string& opcode, const auto& arg0, const auto& arg1, const auto& arg2 ){
-        string regA = bitset<3>(stoi(arg0)).to_string();
-        string regB = bitset<3>(stoi(arg1)).to_string();
-        string regDest = bitset<3>(stoi(arg2)).to_string();
-        return opcode + regA + regB + "0000000000000" + regDest;
-    };
-    auto s_type = [&](const string& opcode, const auto& arg0, const auto& arg1, const auto& arg2 ){
-        string regA = bitset<3>(stoi(arg0)).to_string();
-        string regB = bitset<3>(stoi(arg1)).to_string();
-        string offset ;
-        /*check if arg2 is string or number
-            *else print error and check type of error */
-        if(isNumber(arg2)){
-            if((stoi(arg2)>>16) > 0){
-                cout << "error : use over size offset\n";
-                exit(1);
-            }
-            offset = bitset<16>(stoi(arg2)).to_string();
-        }else{
-            if(labelFill.find(arg2)==labelFill.end()){
-                cout << "error : use undefine label\n";
-                exit(1);
-            }
-            if((labelFill.find(arg2)->second>>16) > 0){
-                cout << "error : use over size offset\n";
-                exit(1);
-            }
-            offset = bitset<16>(labelFill.find(arg2)->second).to_string();
-        }
-        return opcode + regA + regB + offset;
-    };
-    auto beq_type = [&](const string& opcode,auto i){
-        string regA = bitset<3>(stoi(arg0)).to_string();
-        string regB = bitset<3>(stoi(arg1)).to_string();
-        string offset ;
-        /*check if arg2 is string or number
-            *else print error and check type of error */
-        if(isNumber(arg2)){
-            if((stoi(arg2)>>16) > 0){
-                cout << "error : use over size offset\n";
-                exit(1);
-            }
-            offset = bitset<16>(stoi(arg2)).to_string();
-        }else{
-            if(labelFill.find(arg2)==labelFill.end()){
-                cout << "error : use undefine label\n";
-                exit(1);
-            }
-            if((labelFill.find(arg2)->second>>16) > 0){
-                cout << "error : use over size offset\n";
-                exit(1);
-            }
-            auto jump = labelFill.find(arg2)->second -i -1 ;
-            offset = bitset<16>(IntegerToString2sComp(jump)).to_string();
-        }
-        return opcode + regA + regB + offset;
-    };
-    auto jalr_type = [](const string& opcode, const auto& arg0, const auto& arg1, const auto& arg2 ){
-        string regA_j = bitset<3>(stoi(arg0)).to_string();
-        string regB_j = bitset<3>(stoi(arg1)).to_string();
-        return opcode + regA_j +regB_j + "0000000000000000";
-    };
-    auto n_type = [](const string& opcode){
-        return opcode + "0000000000000000000000";
-    };
-    auto fill_op = [&](auto arg0){
-        if(isNumber(arg0)){
-            string::size_type sz;
-            int labelValue = stoi(arg0,&sz);
-            return labelValue ;
-        }
-        return labelFill.find(arg0)->second ;
-    };
 
     assembly.open(argv[1], fstream::in);
     errorMessage(assembly, argv[1]);
@@ -179,31 +81,46 @@ int main(int argc, char *argv[]) {
         label = ""; // clear label
         i++;
     }
-    // machine.close();
-    assembly.close();
     
+    assembly.close(); 
     assembly.open(argv[1], fstream::in);
+    
+    auto add_op = [&](){
+        return toInt(r_type("000", arg0, arg1, arg2));
+    };
+    auto nand_op = [&](){
+        return toInt(r_type("001", arg0, arg1, arg2));
+    };
+    auto fill_op = [&](auto arg0){
+        if(isNumber(arg0)){
+            string::size_type sz;
+            int labelValue = stoi(arg0,&sz);
+            return labelValue ;
+        }
+        return labelFill.find(arg0)->second ;
+    };
+
     i = 0;
     while(getline(assembly, line)){
         parse();
         switch(encodeOpcode(opcode)){
             case add: 
-                machine << toInt(r_type("000", arg0, arg1, arg2)) << '\n'; 
+                machine << add_op() << '\n'; 
                 break;
             case nand: 
-                machine << toInt(r_type("001", arg0, arg1, arg2)) << '\n'; 
+                machine << nand_op() << '\n'; 
                 break;
             case lw: 
-                machine << toInt(s_type("010", arg0, arg1, arg2)) << '\n'; 
+                machine << toInt(s_type("010", arg0, arg1, arg2, labelFill)) << '\n'; 
                 break;
             case sw: 
-                machine << toInt(s_type("011", arg0, arg1, arg2)) << '\n'; 
+                machine << toInt(s_type("011", arg0, arg1, arg2, labelFill)) << '\n'; 
                 break;
             case beq: 
-                machine << toInt(beq_type("100", i)) << '\n'; 
+                machine << toInt(beq_type("100",arg0, arg1, arg2, labelFill, i)) << '\n'; 
                 break;
             case jalr: 
-                machine << toInt(jalr_type("101", arg0, arg1, arg2)) << '\n'; 
+                machine << toInt(jalr_type("101", arg0, arg1)) << '\n'; 
                 break;
             case halt: 
                 machine << toInt(n_type("110")) << '\n'; 
