@@ -17,3 +17,5 @@ g++ -o old old.cpp
 ./old ./test/assembly ./test/machinecode/old_machine
 ./old ./test/factorial ./test/machinecode/old_factorial_machine
 ./old ./test/cnr ./test/machinecode/old_cnr_machine
+
+rm old
