@@ -23,4 +23,3 @@ int encodeOpcode(string s){
     if(s == ".fill") return fill;
     return non_support_opcode;
 }
-

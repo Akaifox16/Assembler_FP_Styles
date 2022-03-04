@@ -51,15 +51,21 @@ int main(int argc, char *argv[]) {
     openFileStream(assembly, argv[1], fstream::in);
     openFileStream(machine, argv[2], fstream::out);
 
-    for(int i= 0; getline(assembly, line); i++){
-        parse();
+    auto readFile = [&](auto callback){
+        for(int i= 0; getline(assembly, line); i++){
+            parse();
+            callback(i);
+        }
+    };
+
+    readFile([&](int i){
         if(label.compare("")!=0){// if contain label
             detectErrorUseSameLabel(labelFill, label);
             labelFill.insert(pair<string, int>(label, i));
         }
         label = ""; // clear label
-    }
-    
+    });
+
     // reopen file
     assembly.close(); 
     openFileStream(assembly, argv[1], fstream::in);
@@ -77,12 +83,8 @@ int main(int argc, char *argv[]) {
         auto op = encodeOpcode(opcode);
         switch(op){
             case add: 
-                // return r_type("000", arg0, arg1, arg2); 
             case nand: return r_type(op, arg0, arg1, arg2); 
             case lw: 
-            // return s_type("010", arg0, arg1, isNumber(arg2) 
-            //                 ? stoi(arg2) 
-            //                 : labelFill.find(arg2)->second); 
             case sw: return s_type(op, arg0, arg1, isNumber(arg2) 
                             ? stoi(arg2) 
                             : labelFill.find(arg2)->second); 
@@ -90,10 +92,8 @@ int main(int argc, char *argv[]) {
                             isNumber(arg2) 
                             ? stoi(arg2) 
                             : labelFill.find(arg2)->second -i -1); 
-            // case beq: return beq_type("100",arg0, arg1, arg2, labelFill, i); 
             case jalr: return jalr_type(op, arg0, arg1); 
             case halt: 
-            // return n_type(op); 
             case noop: return n_type(op); 
             case fill: return fill_op(arg0); 
             default: 
@@ -103,15 +103,13 @@ int main(int argc, char *argv[]) {
         }
     };
 
-    for(int i = 0; getline(assembly, line); i++){
-        parse();
-        machine << map(i) << '\n';        
-    }
+    readFile([&](int i){
+        machine << map(i) << '\n';   
+    });
 
     assembly.close();
     machine.close();
     cout << "compile complete\n";
 
-    exit(0);
     return(0);
 }
