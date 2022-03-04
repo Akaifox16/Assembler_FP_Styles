@@ -1,7 +1,6 @@
 // I/O 
 #include <iostream>
 #include <fstream>
-#include <functional>
 #include <string>
 #include <sstream>
 
@@ -18,7 +17,6 @@
 using   std::string, 
         std::stringstream,
         std::fstream,
-        std::function,
         std::vector,
         std::map , 
         std::pair,
@@ -58,7 +56,6 @@ int main(int argc, char *argv[]) {
         if(label.compare("")!=0){// if contain label
             detectErrorUseSameLabel(labelFill, label);
             labelFill.insert(pair<string, int>(label, i));
-            cout << "label founded!\n";
         }
         label = ""; // clear label
     }
@@ -77,15 +74,27 @@ int main(int argc, char *argv[]) {
     };
 
     auto map = [&](int i){
-        switch(encodeOpcode(opcode)){
-            case add: return r_type("000", arg0, arg1, arg2); 
-            case nand: return r_type("001", arg0, arg1, arg2); 
-            case lw: return s_type("010", arg0, arg1, arg2, labelFill); 
-            case sw: return s_type("011", arg0, arg1, arg2, labelFill); 
-            case beq: return beq_type("100",arg0, arg1, arg2, labelFill, i); 
-            case jalr: return jalr_type("101", arg0, arg1); 
-            case halt: return n_type("110"); 
-            case noop: return n_type("111"); 
+        auto op = encodeOpcode(opcode);
+        switch(op){
+            case add: 
+                // return r_type("000", arg0, arg1, arg2); 
+            case nand: return r_type(op, arg0, arg1, arg2); 
+            case lw: 
+            // return s_type("010", arg0, arg1, isNumber(arg2) 
+            //                 ? stoi(arg2) 
+            //                 : labelFill.find(arg2)->second); 
+            case sw: return s_type(op, arg0, arg1, isNumber(arg2) 
+                            ? stoi(arg2) 
+                            : labelFill.find(arg2)->second); 
+            case beq: return s_type(op,arg0, arg1, 
+                            isNumber(arg2) 
+                            ? stoi(arg2) 
+                            : labelFill.find(arg2)->second -i -1); 
+            // case beq: return beq_type("100",arg0, arg1, arg2, labelFill, i); 
+            case jalr: return jalr_type(op, arg0, arg1); 
+            case halt: 
+            // return n_type(op); 
+            case noop: return n_type(op); 
             case fill: return fill_op(arg0); 
             default: 
                 error(true, [](){

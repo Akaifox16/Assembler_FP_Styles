@@ -11,7 +11,7 @@ enum Opcode {
     non_support_opcode
 };
 
-Opcode encodeOpcode(string s){
+int encodeOpcode(string s){
     if(s == "add") return add;
     if(s == "nand") return nand;
     if(s == "lw") return lw;
@@ -23,3 +23,4 @@ Opcode encodeOpcode(string s){
     if(s == ".fill") return fill;
     return non_support_opcode;
 }
+

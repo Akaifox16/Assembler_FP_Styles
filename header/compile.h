@@ -1,12 +1,14 @@
 #include <bitset>
 #include <map>
 #include <string>
+#include <vector>
 
 #define REG_LENGTH 3
 #define OFFSET_LENGTH 16
 
 using   std::bitset,
         std::string,
+        std::vector,
         std::map,
         std::stoi ;
 
@@ -24,72 +26,30 @@ string int2bin(int n, int bit){
             : bitset<OFFSET_LENGTH>(n).to_string();
 }
 
-int r_type(const string& opcode, const string& arg0, const string& arg1, const string& arg2 ){
-    string regA = int2bin(stoi(arg0), REG_LENGTH);
-    string regB = int2bin(stoi(arg1), REG_LENGTH);
+string op_a_b(const int& opcode, const string& arg0, const string& arg1){
+    return int2bin(opcode, REG_LENGTH)
+            + int2bin(stoi(arg0), REG_LENGTH)
+            + int2bin(stoi(arg1), REG_LENGTH) ;
+}
+
+int r_type(const int& opcode, const string& arg0, const string& arg1, const string& arg2 ){
+    auto op_reg = op_a_b(opcode, arg0, arg1);
     string regDest = int2bin(stoi(arg2), REG_LENGTH);
-    return toInt(opcode + regA + regB + "0000000000000" + regDest);
+    return toInt(op_reg + "0000000000000" + regDest);
 }
 
-auto s_type(const string& opcode, const string& arg0, const string& arg1, const string& arg2, const map<string, int>& labelFill ){
-    string regA = int2bin(stoi(arg0), REG_LENGTH);
-    string regB = int2bin(stoi(arg1), REG_LENGTH);
-    string offset = (isNumber(arg2))
-                    ? int2bin(stoi(arg2), OFFSET_LENGTH)
-                    : int2bin(labelFill.find(arg2)->second, OFFSET_LENGTH);
-    // if(isNumber(arg2)){
-    //     if((stoi(arg2)>>16) > 0){
-    //         cout << "error : use over size offset\n";
-    //         exit(1);
-    //     }
-    // }else{
-    //     if(labelFill.find(arg2)==labelFill.end()){
-    //         cout << "error : use undefine label\n";
-    //         exit(1);
-    //     }
-    //     if((labelFill.find(arg2)->second>>16) > 0){
-    //         cout << "error : use over size offset\n";
-    //         exit(1);
-    //     }
-    // }
-    return toInt(opcode + regA + regB + offset);
+auto s_type(const int& opcode, const string& arg0, const string& arg1, const int& arg2){
+    auto op_reg = op_a_b(opcode, arg0, arg1);
+    string offset = int2bin(arg2, OFFSET_LENGTH);
+    return toInt(op_reg + offset);
 }
 
-auto beq_type(const string& opcode, const string& arg0, const string& arg1, const string& arg2, const map<string, int>& labelFill, const int i){
-    string regA = int2bin(stoi(arg0), REG_LENGTH);
-    string regB = int2bin(stoi(arg1), REG_LENGTH);
-    string offset = (isNumber(arg2))
-                    ? int2bin(stoi(arg2), OFFSET_LENGTH)
-                    : int2bin(labelFill.find(arg2)->second -i -1, OFFSET_LENGTH);
-    /*check if arg2 is string or number
-        *else print error and check type of error */
-    // if(isNumber(arg2)){
-    //     if((stoi(arg2)>>16) > 0){
-    //         cout << "error : use over size offset\n";
-    //         exit(1);
-    //     }
-    //     offset = bitset<16>(stoi(arg2)).to_string();
-    // }else{
-    //     if(labelFill.find(arg2)==labelFill.end()){
-    //         cout << "error : use undefine label\n";
-    //         exit(1);
-    //     }
-    //     if((labelFill.find(arg2)->second>>16) > 0){
-    //         cout << "error : use over size offset\n";
-    //         exit(1);
-    //     }
-    //     auto jump = labelFill.find(arg2)->second -i -1 ;
-    //     offset = bitset<16>(IntegerToString2sComp(jump)).to_string();
-    // }
-    return toInt(opcode + regA + regB + offset);
+auto jalr_type(const int& opcode, const string& arg0, const string& arg1){
+    auto op_reg = op_a_b(opcode, arg0, arg1);
+    return toInt(op_reg + "0000000000000000");
 }
 
-auto jalr_type(const string& opcode, const string& arg0, const string& arg1){
-    string regA = int2bin(stoi(arg0), REG_LENGTH);
-    string regB = int2bin(stoi(arg1), REG_LENGTH);
-    return toInt(opcode + regA +regB + "0000000000000000");
-}
-
-auto n_type(const string& opcode){
-    return toInt(opcode + "0000000000000000000000");
+auto n_type(const int& opcode){
+    string op = int2bin(opcode, REG_LENGTH);
+    return toInt(op + "0000000000000000000000");
 }
