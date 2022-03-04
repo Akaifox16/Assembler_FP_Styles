@@ -13,7 +13,7 @@ target_include_directories(Assembler
 
 # CTEST
 add_test(NAME AssemblyTest1 
-        COMMAND Assembler /home/akaifox/_workspace/CMake_Assembler/test/assembly.txt /home/akaifox/_workspace/CMake_Assembler/test/machine.txt)
+        COMMAND Assembler ../test/assembly.txt ../test/machine.txt)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

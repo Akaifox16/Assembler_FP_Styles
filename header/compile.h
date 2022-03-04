@@ -7,7 +7,8 @@
 
 using   std::bitset,
         std::string,
-        std::map ;
+        std::map,
+        std::stoi ;
 
 bool isNumber(const string& s){
     return s.find_first_not_of("-0123456789") == string::npos;
@@ -23,11 +24,11 @@ string int2bin(int n, int bit){
             : bitset<OFFSET_LENGTH>(n).to_string();
 }
 
-string r_type(const string& opcode, const string& arg0, const string& arg1, const string& arg2 ){
+int r_type(const string& opcode, const string& arg0, const string& arg1, const string& arg2 ){
     string regA = int2bin(stoi(arg0), REG_LENGTH);
     string regB = int2bin(stoi(arg1), REG_LENGTH);
     string regDest = int2bin(stoi(arg2), REG_LENGTH);
-    return opcode + regA + regB + "0000000000000" + regDest;
+    return toInt(opcode + regA + regB + "0000000000000" + regDest);
 }
 
 auto s_type(const string& opcode, const string& arg0, const string& arg1, const string& arg2, const map<string, int>& labelFill ){
@@ -51,7 +52,7 @@ auto s_type(const string& opcode, const string& arg0, const string& arg1, const 
     //         exit(1);
     //     }
     // }
-    return opcode + regA + regB + offset;
+    return toInt(opcode + regA + regB + offset);
 }
 
 auto beq_type(const string& opcode, const string& arg0, const string& arg1, const string& arg2, const map<string, int>& labelFill, const int i){
@@ -80,15 +81,15 @@ auto beq_type(const string& opcode, const string& arg0, const string& arg1, cons
     //     auto jump = labelFill.find(arg2)->second -i -1 ;
     //     offset = bitset<16>(IntegerToString2sComp(jump)).to_string();
     // }
-    return opcode + regA + regB + offset;
+    return toInt(opcode + regA + regB + offset);
 }
 
 auto jalr_type(const string& opcode, const string& arg0, const string& arg1){
     string regA = int2bin(stoi(arg0), REG_LENGTH);
     string regB = int2bin(stoi(arg1), REG_LENGTH);
-    return opcode + regA +regB + "0000000000000000";
+    return toInt(opcode + regA +regB + "0000000000000000");
 }
 
 auto n_type(const string& opcode){
-    return opcode + "0000000000000000000000";
+    return toInt(opcode + "0000000000000000000000");
 }

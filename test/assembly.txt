@@ -1,10 +1,54 @@
-        lw      0       1       five    load reg1 with 5 (uses symbolic address)
-        lw      1       2       3       load reg2 with -1 (uses numeric address
-start   add     1       2       1       decrement reg1
-        beq     0       1       2       goto end of program when reg1==0
-        beq     0       0       start   go back to the beginning of the loop
-        noop
-done    halt                            end of program
-five    .fill   5
+        lw      0       1       input   $1 = n
+        lw      0       2       r       $2 = r
+        lw      0       6       c2Addr
+        jalr    6       7               call comb condition
+done    halt
+comb    lw      0       6       neg1    
+        add     1       6       1       n -= 1
+        lw      0       6       pos1    
+        sw      5       7       stack   push $7(ra)
+        add     5       6       5       sp++ 
+        sw      5       1       stack   push $1(n)
+        add     5       6       5       sp++
+        sw      5       2       stack   push $2(r)
+        add     5       6       5       sp++
+        lw      0       6       c2Addr  $6 = comb2
+        jalr    6       7               call comb condition   
+        add     0       0       4
+        add     3       4       4       loc = comb(n-1,r)
+        sw      5       4       stack   push $4(loc)
+        lw      0       6       neg1    
+        add     5       6       5       sp-- pt. r
+        lw      5       2       stack   load $2(r)
+        add     5       6       5       sp-- pt. n
+        lw      5       1       stack   load $1(n)
+        add     2       6       2       r -= 1
+        lw      0       6       pos1
+        add     5       6       5       sp++ pt. r
+        add     5       6       5       sp++ pt. loc
+        add     5       6       5       sp++
+        lw      0       6       c2Addr  $6 = comb2
+        jalr    6       7               call comb condition
+        lw      0       6       neg1    
+        add     5       6       5       sp-- pt. loc
+        lw      5       4       stack   pop $4(loc)
+        add     3       4       3       $3 = $3 + loc
+        add     5       6       5       sp-- pt. r
+        add     5       6       5       sp-- pt. n
+        add     5       6       5       sp-- pt. ra
+        lw      5       7       stack   pop $7(ra)
+        jalr    7       0               return
+comb2   beq     1       2       equal
+        beq     2       0       equal   if n==r || r == 0 go to "equal"
+        lw      0       4       cmbAddr 
+        jalr    4       0               else call comb()
+equal   lw      0       6       pos1    
+        add     0       6       3       $3 = 1
+        jalr    7       0               return
+pos1    .fill   1
 neg1    .fill   -1
-stAddr  .fill   start                   will contain the address of start
+cmbAddr .fill   comb
+c2Addr  .fill   comb2   
+r       .fill   3                       
+input   .fill   7                       
+stack   .fill   0                       beginning of stack (value is irrelevant)
