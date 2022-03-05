@@ -1,14 +1,9 @@
-// I/O 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
-
-// containers
 #include <vector>
 #include <map>
-
-// others
 #include <scn/scn.h>
 #include "header/opcode.h"
 #include "header/compile.h"
@@ -69,33 +64,28 @@ int main(int argc, char *argv[]) {
     // reopen file
     assembly.close(); 
     openFileStream(assembly, argv[1], fstream::in);
-    
-    auto fill_op = [&](auto arg0){
-        if(isNumber(arg0)){
-            string::size_type sz;
-            int labelValue = stoi(arg0,&sz);
-            return labelValue ;
-        }
-        return labelFill.find(arg0)->second ;
-    };
 
-    auto map = [&](int i){
+    auto map = [&](int i){        
+        auto label_finder = [&](auto& arg, bool isBeq=false){
+            if(isNumber(arg)){
+                return stoi(arg);
+            }
+            return isBeq 
+                    ? labelFill.find(arg)->second -i -1
+                    : labelFill.find(arg)->second;
+        };
+
         auto op = encodeOpcode(opcode);
         switch(op){
             case add: 
             case nand: return r_type(op, arg0, arg1, arg2); 
             case lw: 
-            case sw: return s_type(op, arg0, arg1, isNumber(arg2) 
-                            ? stoi(arg2) 
-                            : labelFill.find(arg2)->second); 
-            case beq: return s_type(op,arg0, arg1, 
-                            isNumber(arg2) 
-                            ? stoi(arg2) 
-                            : labelFill.find(arg2)->second -i -1); 
+            case sw: return s_type(op, arg0, arg1, label_finder(arg2)); 
+            case beq: return s_type(op,arg0, arg1, label_finder(arg2, true)); 
             case jalr: return jalr_type(op, arg0, arg1); 
             case halt: 
             case noop: return n_type(op); 
-            case fill: return fill_op(arg0); 
+            case fill: return label_finder(arg0); 
             default: 
                 error(true, [](){
                     cout << "error: use undefined opcode !\n";
