@@ -9,24 +9,15 @@
 #include "header/compile.h"
 #include "header/error.h"
 
-using   std::string, 
-        std::stringstream,
+using   std::string, std::stringstream,
         std::fstream,
-        std::vector,
-        std::map , 
-        std::pair,
-        std::endl,
-        std::getline,
-        std::cout ;
+        std::vector, std::map, std::pair,
+        std::getline, std::cout, std::endl;
 
 int main(int argc, char *argv[]) {
     fstream assembly, machine; 
     string line, label, opcode, arg0, arg1, arg2;
     map<string, int> labelFill;
-    
-    error( argc != 3, [&](){
-        cout << "error: usage: " << argv[0] << " <assembly-code-file> <machine-code-file>\n" ;
-    });
     
     auto parse = [&](){
         auto res = scn::scan(line, "{:s} {:s}", label);
@@ -43,27 +34,12 @@ int main(int argc, char *argv[]) {
         detectErrorFileOpening( file, arg );
     };
 
-    openFileStream(assembly, argv[1], fstream::in);
-    openFileStream(machine, argv[2], fstream::out);
-
     auto readFile = [&](auto callback){
         for(int i= 0; getline(assembly, line); i++){
             parse();
             callback(i);
         }
     };
-
-    readFile([&](int i){
-        if(label.compare("")!=0){// if contain label
-            detectErrorUseSameLabel(labelFill, label);
-            labelFill.insert(pair<string, int>(label, i));
-        }
-        label = ""; // clear label
-    });
-
-    // reopen file
-    assembly.close(); 
-    openFileStream(assembly, argv[1], fstream::in);
 
     auto map = [&](int i){        
         auto label_finder = [&](auto& arg, bool isBeq=false){
@@ -91,8 +67,31 @@ int main(int argc, char *argv[]) {
                     cout << "error: use undefined opcode !\n";
                 });
         }
-    };
 
+        return 0;
+    };
+    
+    error( argc != 3, [&](){
+        cout << "error: usage: " << argv[0] << " <assembly-code-file> <machine-code-file>\n" ;
+    });
+
+    openFileStream(assembly, argv[1], fstream::in);
+    openFileStream(machine, argv[2], fstream::out);
+
+    // find label
+    readFile([&](int i){
+        if(label.compare("")!=0){
+            detectErrorUseSameLabel(labelFill, label);
+            labelFill.insert(pair<string, int>(label, i));
+        }
+        label = "";
+    });
+
+    // reopen file
+    assembly.close(); 
+    openFileStream(assembly, argv[1], fstream::in);
+
+    // mapping form assembly to machine code
     readFile([&](int i){
         machine << map(i) << '\n';   
     });

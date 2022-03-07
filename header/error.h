@@ -4,9 +4,8 @@
 #include<map>
 
 using   std::function,
-        std::map,
         std::fstream,
-        std::string,
+        std::map,std::string,
         std::cout;
 
 void error(const bool& condition, function<void()> callback){

@@ -6,10 +6,7 @@
 #define REG_LENGTH 3
 #define OFFSET_LENGTH 16
 
-using   std::bitset,
-        std::string,
-        std::vector,
-        std::map,
+using   std::string, std::bitset, std::vector, std::map,
         std::stoi ;
 
 bool isNumber(const string& s){
@@ -26,30 +23,25 @@ string int2bin(int n, int bit){
             : bitset<OFFSET_LENGTH>(n).to_string();
 }
 
-string op_a_b(const int& opcode, const string& arg0, const string& arg1){
-    return int2bin(opcode, REG_LENGTH)
+auto op2mach(const int& opcode, const string& arg0, const string& arg1, const string& arg2){
+    return toInt(int2bin(opcode, REG_LENGTH)
             + int2bin(stoi(arg0), REG_LENGTH)
-            + int2bin(stoi(arg1), REG_LENGTH) ;
+            + int2bin(stoi(arg1), REG_LENGTH)
+            + arg2) ;
 }
 
-int r_type(const int& opcode, const string& arg0, const string& arg1, const string& arg2 ){
-    auto op_reg = op_a_b(opcode, arg0, arg1);
-    string regDest = int2bin(stoi(arg2), REG_LENGTH);
-    return toInt(op_reg + "0000000000000" + regDest);
+auto r_type(const int& opcode, const string& arg0, const string& arg1, const string& arg2 ){
+    return op2mach(opcode, arg0, arg1, "0000000000000" + int2bin(stoi(arg2), REG_LENGTH));
 }
 
 auto s_type(const int& opcode, const string& arg0, const string& arg1, const int& arg2){
-    auto op_reg = op_a_b(opcode, arg0, arg1);
-    string offset = int2bin(arg2, OFFSET_LENGTH);
-    return toInt(op_reg + offset);
+    return op2mach(opcode, arg0, arg1, int2bin(arg2, OFFSET_LENGTH));
 }
 
 auto jalr_type(const int& opcode, const string& arg0, const string& arg1){
-    auto op_reg = op_a_b(opcode, arg0, arg1);
-    return toInt(op_reg + "0000000000000000");
+    return op2mach(opcode, arg0, arg1, "0000000000000000");
 }
 
 auto n_type(const int& opcode){
-    string op = int2bin(opcode, REG_LENGTH);
-    return toInt(op + "0000000000000000000000");
+    return op2mach(opcode, "000", "000", "0000000000000000");
 }
