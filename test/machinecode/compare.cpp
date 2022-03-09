@@ -18,7 +18,7 @@ int main(int argc, char *argv[]){
     old.open(argv[2], fstream::in);
 
     for(int i= 1; getline(func, funcLine) && getline(old, oldLine) ; i++){
-        if(funcLine.compare(oldLine) == 0){
+        if(funcLine.compare(oldLine) != 0){
             cout << "file difference in line " << i << endl;
             isDifference = true; break;
         }
