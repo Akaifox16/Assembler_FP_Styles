@@ -2,6 +2,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "error.h"
 
 #define REG_LENGTH 3
 #define OFFSET_LENGTH 16
@@ -31,10 +32,13 @@ auto op2mach(const int& opcode, const string& arg0, const string& arg1, const st
 }
 
 auto r_type(const int& opcode, const string& arg0, const string& arg1, const string& arg2 ){
-    return op2mach(opcode, arg0, arg1, "0000000000000" + int2bin(stoi(arg2), REG_LENGTH));
+    int reg = stoi(arg2);
+    detectErrorOversizeOffset(reg);
+    return op2mach(opcode, arg0, arg1, "0000000000000" + int2bin(reg, REG_LENGTH));
 }
 
 auto s_type(const int& opcode, const string& arg0, const string& arg1, const int& arg2){
+    detectErrorOversizeOffset(arg2);
     return op2mach(opcode, arg0, arg1, int2bin(arg2, OFFSET_LENGTH));
 }
 

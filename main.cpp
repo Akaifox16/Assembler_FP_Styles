@@ -46,6 +46,7 @@ int main(int argc, char *argv[]) {
             if(isNumber(arg)){
                 return stoi(arg);
             }
+            detectErrorUndefineLabel(labelFill, arg);
             return isBeq 
                     ? labelFill.find(arg)->second -i -1
                     : labelFill.find(arg)->second;
