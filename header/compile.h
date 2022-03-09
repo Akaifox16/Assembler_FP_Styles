@@ -39,9 +39,9 @@ auto s_type(const int& opcode, const string& arg0, const string& arg1, const int
 }
 
 auto jalr_type(const int& opcode, const string& arg0, const string& arg1){
-    return op2mach(opcode, arg0, arg1, "0000000000000000");
+    return op2mach(opcode, arg0, arg1, int2bin(0, OFFSET_LENGTH));
 }
 
 auto n_type(const int& opcode){
-    return op2mach(opcode, "000", "000", "0000000000000000");
+    return op2mach(opcode, string("0"), string("0"), int2bin(0, OFFSET_LENGTH));
 }
